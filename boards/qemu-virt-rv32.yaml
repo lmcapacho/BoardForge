@@ -1,0 +1,31 @@
+name: qemu-virt-rv32
+description: Generic 32-bit RISC-V board on QEMU virt.
+vendor: generic
+architecture: riscv32
+cpu: rv32imac
+backend: qemu
+machine: virt
+firmware_format: elf
+memory_regions:
+  - name: flash
+    base: 0x20000000
+    size: 0x01000000
+    kind: rom
+    permissions: rx
+  - name: ram
+    base: 0x80000000
+    size: 0x08000000
+    kind: ram
+    permissions: rwx
+peripherals:
+  - name: uart0
+    kind: uart
+    address: 0x10000000
+    size: 0x100
+  - name: rtc
+    kind: timer
+    address: 0x101000
+    size: 0x1000
+backend_options:
+  binary: qemu-system-riscv32
+  gdb_port: 1234
