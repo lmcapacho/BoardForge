@@ -28,4 +28,6 @@ peripherals:
     size: 0x1000
 backend_options:
   binary: qemu-system-riscv32
+  cpu_model: rv32
+  gdb_stub: false
   gdb_port: 1234
