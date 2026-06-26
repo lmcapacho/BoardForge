@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 
 from .backends import BackendRegistry
-from .boards import load_board_spec
+from .boards import BoardCatalog
 from .core import Backend, BoardSpec
 
 
@@ -32,8 +32,9 @@ class EngineSession:
 class Engine:
     """Coordinates board loading and backend execution."""
 
-    def __init__(self, backends: BackendRegistry) -> None:
+    def __init__(self, backends: BackendRegistry, boards: BoardCatalog | None = None) -> None:
         self._backends = backends
+        self._boards = boards or BoardCatalog.default()
         self._state = EngineState.IDLE
         self._session: EngineSession | None = None
 
@@ -44,6 +45,12 @@ class Engine:
     @property
     def session(self) -> EngineSession | None:
         return self._session
+
+    @property
+    def active_backend(self) -> Backend | None:
+        if self._session is None:
+            return None
+        return self._backends.get(self._session.backend_name)
 
     def load(self, board: BoardSpec | str | Path, image_path: str | Path) -> EngineSession:
         resolved_board = self._resolve_board(board)
@@ -78,9 +85,7 @@ class Engine:
         self._state = EngineState.IDLE
 
     def _resolve_board(self, board: BoardSpec | str | Path) -> BoardSpec:
-        if isinstance(board, BoardSpec):
-            return board
-        return load_board_spec(board)
+        return self._boards.resolve(board)
 
     def _backend_for_board(self, board: BoardSpec) -> Backend:
         return self._backends.get(board.backend)

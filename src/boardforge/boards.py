@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 import yaml
 
@@ -13,6 +13,66 @@ from .core import BoardSpec, MemoryRegion, Peripheral
 
 class BoardValidationError(ValueError):
     """Raised when a board definition is missing required data."""
+
+
+class BoardNotFoundError(LookupError):
+    """Raised when a board name cannot be resolved by a catalog."""
+
+
+class BoardCatalog:
+    """Discovers and resolves built-in and user-provided board definitions."""
+
+    def __init__(self, *search_paths: str | Path) -> None:
+        self._search_paths = tuple(Path(path) for path in search_paths if Path(path))
+
+    @classmethod
+    def default(cls) -> BoardCatalog:
+        repo_root = Path(__file__).resolve().parents[2]
+        return cls(repo_root / "boards")
+
+    @property
+    def search_paths(self) -> tuple[Path, ...]:
+        return self._search_paths
+
+    def add_search_path(self, path: str | Path) -> BoardCatalog:
+        return BoardCatalog(*self._search_paths, Path(path))
+
+    def list(self) -> tuple[BoardSpec, ...]:
+        return tuple(load_board_spec(path) for path in self._iter_board_files())
+
+    def names(self) -> tuple[str, ...]:
+        return tuple(board.name for board in self.list())
+
+    def get(self, name: str) -> BoardSpec:
+        normalized = name.casefold()
+        for board_path in self._iter_board_files():
+            board = load_board_spec(board_path)
+            if board.name.casefold() == normalized:
+                return board
+        raise BoardNotFoundError(f"board '{name}' was not found in the configured catalog paths")
+
+    def resolve(self, board: BoardSpec | str | Path) -> BoardSpec:
+        if isinstance(board, BoardSpec):
+            return board
+
+        candidate = Path(board)
+        if candidate.suffix in {".yaml", ".yml", ".json"} or candidate.exists():
+            return load_board_spec(candidate)
+        return self.get(str(board))
+
+    def _iter_board_files(self) -> Iterable[Path]:
+        seen: set[Path] = set()
+        for search_path in self._search_paths:
+            if not search_path.exists():
+                continue
+            for board_file in sorted(search_path.rglob("*")):
+                if board_file.suffix.lower() not in {".yaml", ".yml", ".json"}:
+                    continue
+                resolved = board_file.resolve()
+                if resolved in seen:
+                    continue
+                seen.add(resolved)
+                yield board_file
 
 
 def load_board_spec(path: str | Path) -> BoardSpec:

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from boardforge.boards import BoardValidationError, load_board_spec
+from boardforge.boards import BoardCatalog, BoardNotFoundError, BoardValidationError, load_board_spec
 
 
 def test_load_board_spec_parses_sample_board() -> None:
@@ -22,3 +22,19 @@ def test_load_board_spec_requires_core_fields(tmp_path: Path) -> None:
 
     with pytest.raises(BoardValidationError):
         load_board_spec(board_file)
+
+
+def test_board_catalog_resolves_builtin_board_by_name() -> None:
+    catalog = BoardCatalog.default()
+
+    board = catalog.get("qemu-virt-rv32")
+
+    assert board.machine == "virt"
+    assert "qemu-virt-rv32" in catalog.names()
+
+
+def test_board_catalog_raises_for_unknown_board() -> None:
+    catalog = BoardCatalog.default()
+
+    with pytest.raises(BoardNotFoundError):
+        catalog.get("missing-board")

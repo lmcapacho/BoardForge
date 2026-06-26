@@ -43,6 +43,16 @@ def test_engine_loads_board_from_file_and_tracks_session() -> None:
     assert backend.events == [("load", "qemu-virt-rv32", Path("firmware/demo.elf"))]
 
 
+def test_engine_loads_board_from_catalog_name() -> None:
+    engine, backend = make_engine()
+
+    session = engine.load("qemu-virt-rv32", "firmware/demo.elf")
+
+    assert session.board.machine == "virt"
+    assert engine.state is EngineState.LOADED
+    assert backend.events == [("load", "qemu-virt-rv32", Path("firmware/demo.elf"))]
+
+
 def test_engine_runs_pauses_and_stops_loaded_session() -> None:
     engine, backend = make_engine()
     engine.load("boards/qemu-virt-rv32.yaml", "firmware/demo.elf")
