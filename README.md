@@ -36,6 +36,49 @@ The first iterations should focus on:
 3. A first Renode backend.
 4. An optional QEMU backend for generic targets.
 
+## First Real Runs
+
+Build the included QEMU sample firmware:
+
+```bash
+cd /home/lmcapacho/Documents/Projects/boardforge
+source .venv/bin/activate
+boardforge build examples/qemu-virt-rv32
+```
+
+Run it with the built-in QEMU board:
+
+```bash
+boardforge doctor
+boardforge run qemu-virt-rv32 examples/qemu-virt-rv32/hello_uart.elf --timeout 1.0
+```
+
+Or build and run in one step:
+
+```bash
+boardforge run qemu-virt-rv32 --project-dir examples/qemu-virt-rv32 --build --timeout 1.0
+```
+
+Build the included Renode sample firmware:
+
+```bash
+boardforge build examples/renode-rv32-virt
+```
+
+Run it with the built-in Renode board:
+
+```bash
+boardforge run renode-rv32-virt examples/renode-rv32-virt/hello_uart.elf --timeout 4.0
+```
+
+Or build and run in one step:
+
+```bash
+boardforge run renode-rv32-virt --project-dir examples/renode-rv32-virt --build --timeout 4.0
+```
+
+Both flows should print a line from the emulated firmware through the board UART.
+
 ## License
 
 This project uses the GNU General Public License v3.0, matching the earlier prototype work.
