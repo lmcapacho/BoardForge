@@ -326,6 +326,25 @@ def _show_board(catalog: BoardCatalog, board_ref: str) -> int:
     return 0
 
 
+def _sanitize_backend_output(output: str, backend_name: str | None) -> str:
+    if not output:
+        return output
+    if backend_name != "qemu":
+        return output
+
+    lines = [
+        line
+        for line in output.splitlines()
+        if not line.startswith("qemu-system-") or "terminating on signal 15" not in line
+    ]
+    if not lines:
+        return ""
+    sanitized = "\n".join(lines)
+    if output.endswith("\n"):
+        sanitized += "\n"
+    return sanitized
+
+
 def _prepare(engine, board_ref: str, image: str) -> int:
     session = engine.load(board_ref, image)
     print(f"prepared: {session.board.name}")
@@ -374,6 +393,7 @@ def _run(
     print(f"state: {engine.state.value}")
 
     backend = engine.active_backend
+    backend_name = getattr(backend, "name", None)
     backend_session = getattr(backend, "session", None)
     command = getattr(backend_session, "command", None)
     process = getattr(backend_session, "process", None)
@@ -384,6 +404,7 @@ def _run(
 
     try:
         stdout, _ = process.communicate(timeout=timeout)
+        stdout = _sanitize_backend_output(stdout, backend_name)
         if stdout:
             print(stdout, end="" if stdout.endswith("\n") else "\n")
         print(f"exit-code: {process.returncode}")
@@ -392,6 +413,7 @@ def _run(
         partial_stdout = exc.stdout or ""
         if isinstance(partial_stdout, bytes):
             partial_stdout = partial_stdout.decode(errors="replace")
+        partial_stdout = _sanitize_backend_output(partial_stdout, backend_name)
         if partial_stdout:
             print(partial_stdout, end="" if partial_stdout.endswith("\n") else "\n")
         print(f"timeout: process still running after {timeout:.1f}s")
@@ -402,6 +424,7 @@ def _run(
             leftover_stdout = ""
         if isinstance(leftover_stdout, bytes):
             leftover_stdout = leftover_stdout.decode(errors="replace")
+        leftover_stdout = _sanitize_backend_output(leftover_stdout, backend_name)
         if leftover_stdout:
             print(leftover_stdout, end="" if leftover_stdout.endswith("\n") else "\n")
         print("session stopped")

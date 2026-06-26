@@ -1,6 +1,22 @@
 from pathlib import Path
 
-from boardforge.cli import main
+from boardforge.cli import _sanitize_backend_output, main
+
+
+def test_sanitize_backend_output_removes_qemu_termination_line() -> None:
+    output = "Hello from Boardforge!\nqemu-system-riscv32: terminating on signal 15 from pid 123\n"
+
+    sanitized = _sanitize_backend_output(output, "qemu")
+
+    assert sanitized == "Hello from Boardforge!\n"
+
+
+def test_sanitize_backend_output_keeps_non_qemu_output() -> None:
+    output = "22:22:10 [INFO] uart0: Hello from Boardforge!\n"
+
+    sanitized = _sanitize_backend_output(output, "renode")
+
+    assert sanitized == output
 
 
 def test_cli_build(tmp_path: Path, capsys) -> None:
