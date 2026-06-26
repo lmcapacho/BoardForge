@@ -1,0 +1,4 @@
+[project]
+board = "qemu-virt-rv32"
+artifact = "hello_uart.elf"
+target = "all"

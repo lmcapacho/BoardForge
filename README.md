@@ -27,14 +27,24 @@ The project is intended to support:
 - `docs/`
   Design notes and architecture decisions.
 
-## Initial Scope
+## Project Manifests
 
-The first iterations should focus on:
+Firmware projects can include a `boardforge.toml` file to declare:
 
-1. A backend-neutral engine interface.
-2. A board specification format.
-3. A first Renode backend.
-4. An optional QEMU backend for generic targets.
+- `board`: default board name
+- `artifact`: primary ELF path relative to the project directory
+- `target`: default `make` target
+
+Example:
+
+```toml
+[project]
+board = "qemu-virt-rv32"
+artifact = "hello_uart.elf"
+target = "all"
+```
+
+With that file in place, `boardforge run` can infer the board and firmware artifact directly from the project directory.
 
 ## First Real Runs
 
@@ -53,10 +63,10 @@ boardforge doctor
 boardforge run qemu-virt-rv32 examples/qemu-virt-rv32/hello_uart.elf --timeout 1.0
 ```
 
-Or build and run in one step:
+Or build and run in one step using the project manifest:
 
 ```bash
-boardforge run qemu-virt-rv32 --project-dir examples/qemu-virt-rv32 --build --timeout 1.0
+boardforge run --project-dir examples/qemu-virt-rv32 --build --timeout 1.0
 ```
 
 Build the included Renode sample firmware:
@@ -71,10 +81,10 @@ Run it with the built-in Renode board:
 boardforge run renode-rv32-virt examples/renode-rv32-virt/hello_uart.elf --timeout 4.0
 ```
 
-Or build and run in one step:
+Or build and run in one step using the project manifest:
 
 ```bash
-boardforge run renode-rv32-virt --project-dir examples/renode-rv32-virt --build --timeout 4.0
+boardforge run --project-dir examples/renode-rv32-virt --build --timeout 4.0
 ```
 
 Both flows should print a line from the emulated firmware through the board UART.

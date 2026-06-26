@@ -1,0 +1,4 @@
+[project]
+board = "renode-rv32-virt"
+artifact = "hello_uart.elf"
+target = "all"
