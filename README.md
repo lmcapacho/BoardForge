@@ -51,7 +51,7 @@ With that file in place, `boardforge run` can infer the board and firmware artif
 Build the included QEMU sample firmware:
 
 ```bash
-cd /home/lmcapacho/Documents/Projects/boardforge
+cd boardforge
 source .venv/bin/activate
 boardforge build examples/qemu-virt-rv32
 ```
